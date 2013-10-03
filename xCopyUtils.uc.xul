@@ -1,0 +1,495 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!--
+// ==UserScript==
+// @name           Copy Utils X
+// @namespace      zephyrer@msn.com
+// @description    enhancements to firefox context copy functions
+// @include        main
+// @compatibility  Firefox 2.0
+// @author         Efisio R. Zephyr
+// @version        1.0
+// @Note           
+// ==/UserScript==
+--> 
+<!-- ***** BEGIN LICENSE BLOCK *****
+-   Version: MPL 1.1/GPL 2.0/LGPL 2.1
+-
+- The contents of this file are subject to the Mozilla Public License Version
+- 1.1 (the "License"); you may not use this file except in compliance with
+- the License. You may obtain a copy of the License at
+- http://www.mozilla.org/MPL/
+- 
+- Software distributed under the License is distributed on an "AS IS" basis,
+- WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+- for the specific language governing rights and limitations under the
+- License.
+-
+- The Original Code is Copy Link Text.
+-
+- The Initial Developer of the Original Code is
+- Brett Zamir.
+- Portions created by the Initial Developer are Copyright (C) 2007
+- the Initial Developer. All Rights Reserved.
+-
+- Contributor(s):
+-
+- Alternatively, the contents of this file may be used under the terms of
+- either the GNU General Public License Version 2 or later (the "GPL"), or
+- the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+- in which case the provisions of the GPL or the LGPL are applicable instead
+- of those above. If you wish to allow use of your version of this file only
+- under the terms of either the GPL or the LGPL, and not to allow others to
+- use your version of this file under the terms of the MPL, indicate your
+- decision by deleting the provisions above and replace them with the notice
+- and other provisions required by the GPL or the LGPL. If you do not delete
+- the provisions above, a recipient may use your version of this file under
+- the terms of any one of the MPL, the GPL or the LGPL.
+- 
+- ***** END LICENSE BLOCK ***** -->
+
+<overlay id="xcopyutils-overlay"
+	 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<script type="application/x-javascript" xmlns="http://www.w3.org/1999/xhtml">
+<![CDATA[
+	
+var xCopyUtils = {
+		xSubMenuId: "x-copytitleurl",
+	initialized: false,
+	
+	xSubMenus: [
+		{
+			// 标题 URI
+			label: "\u5404\u5360\u4E00\u884C\uFF1A\u6807\u9898, URI",
+			accesskey: "C",
+			text: '%TITLE%%EOL%%URL%%EOL%'
+		},
+		{
+			// 标题 选择部分 URI
+			label: "\u5404\u5360\u4E00\u884C\uFF1A\u6807\u9898, \u9009\u62E9, URI",
+			accesskey: "S",
+			text: '%TITLE%%EOL%"%SEL%"%EOL%%URL%%EOL%',
+			condition: "select"
+		},
+		{
+			// 选定链接的文字和URL
+			label: "\u5404\u5360\u4E00\u884C\uFF1A\u9009\u62E9, \u94FE\u63A5 URL",
+			accesskey: "S",
+			text: '"%SEL%"%EOL%%RLINK%%EOL%',
+			condition: "select-link"
+		},
+		{
+			// 分隔条
+			label: "separator",
+		},
+		{
+			// 标题
+			label: "\u6807\u9898",
+			accesskey: "T",
+			text: '%TITLE%'
+		},
+		{
+			// URI
+			label: "URI",
+			accesskey: "U",
+			text: '%URL%'
+		},
+		{
+			// 标题 - URI
+			label: "\u6807\u9898 - URI",
+			accesskey: "I",
+			text: '%TITLE% - %URL%%EOL%'
+		},
+		{
+			// 链接 URL
+			label: "\u94FE\u63A5 URI",
+			accesskey: "L",
+			text: '%RLINK%',
+			condition: "link"
+		},
+		{
+			// 分隔条
+			label: "separator",
+		},
+		{
+			// HTML
+			label: "HTML",
+			accesskey: "H",
+			text: '<a href="%URL_HTMLIFIED%">%TITLE_HTMLIFIED%</a>'
+		},
+		{
+			// HTML(title)
+			label: "HTML(\u6807\u9898)",
+			accesskey: "A",
+			text: '<a href="%URL_HTMLIFIED%" title="%TITLE_HTMLIFIED%"></a>'
+		},
+		{
+			// 链接编码 URL
+			label: "\u94FE\u63A5\u7F16\u7801 URL",
+			accesskey: "E",
+			text: '%RLINK_HTMLIFIED%',
+			condition: "link"
+		},
+		{
+			// 选择时分隔条
+			label: "separator",
+			condition: "select"
+		},
+		{
+			// 块引用
+			label: "\u5757\u5F15\u7528",
+			accesskey: "B",
+			text: '<blockquote cite="%URL_HTMLIFIED%" title="%TITLE_HTMLIFIED%">%EOL%<p>%SEL_HTMLIFIED%</p>%EOL%</blockquote>%EOL%',
+			condition: "select"
+		},
+		{
+			// 行引用
+			label: "\u884C\u5F15\u7528",
+			accesskey: "Q",
+			text: '<q cite="%URL_HTMLIFIED%" title="%TITLE_HTMLIFIED%">%SEL_HTMLIFIED%</q>',
+			condition: "select"
+		},
+		{
+			// 图片时分隔条
+			label: "separator",
+			condition: "link-image"
+		},
+		{
+			// 图片链接
+			label: "\u56FE\u7247\u94FE\u63A5",
+			accesskey: "B",
+			text: '<a href="%RLINK_HTMLIFIED%"><img src="%IMAGE_URL_HTMLIFIED%" alt="%IMAGE_ALT_HTMLIFIED%" /></a>',
+			condition: "link-image"
+		}
+	],
+
+	initSubMenus: function() {
+		var contextMenu = document.getElementById("contentAreaContextMenu");
+		var separator = document.getElementById("context-sep-properties");
+		
+		var menu = document.createElement("menu");
+		menu.id = this.xSubMenuId;
+		menu.setAttribute("label", "\u590D\u5236\u6807\u9898\u548C URL");
+		menu.setAttribute("accesskey", "U");
+		menu.className = "menu-iconic";
+		menu.setAttribute("image", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8%2F9hAAAABGdBTUEAALGPC%2FxhBQAAAAlwSFlzAAAnEAAAJxABlGlRGQAAAAd0SU1FB9QGGAEvLH6QQPAAAAAYdEVYdFNvZnR3YXJlAFBhaW50Lk5FVCBWMy4wOKSzs%2BUAAALoSURBVDhPjZJLTBNRFIYHiAaMIT4CiogLF0ajcWUwrjXiwrgDhGhMfCFWIyQaDZGIhBhBkTdYRUyDIYIgzzSIiAYQsRRoLa%2FSlvJomRampQItBWbu750xEFlAPJkz58zi%2F%2Bb8516fgoqpxG2Bm%2Fb6b2aC%2Ff19g7YG%2BO3keYQ5XItTIL7R0RE7BpmNorKZqxUEAkIIlngC%2BmCZvpp%2FsCiudfbnfOCPbQjIKzPHspwXYoiAhSVKoFH%2FZRiP89VIyeu2MszNoHUh9591h7X1OhZEmYeK5yjLaOfR0DGD900WlFSPIl1ubGzp8bysapmpK22YvrYWti9zS%2B1Xa6eXB1wegtlFoFmzgF69FyJ0cRmYdQvSZGOsG2VKK1Eo3Q9TW%2BG3AvJ5V28ompolmOQIuHlAZVpGu3YOgiCsWvNSkHNuEU%2BKupD%2BZhh3M1SJjE%2BbjwQpKNPKtKZ5WDhgfEqA2giUNjphc3ilpbrp3%2Be9BM55AV06Fp3aMbyrMwxFXG4LlAApuR0RrT12sC7gdaEN2Vl25FZOw2DxUDG1Rjck2rO7aF2gp0Tn%2Bq51keT83oMSIPb2h3Blm0UoltvBHICUV2VGdPb9BjcHsDPUmhuYpHWC2rQ4ALXejdTC7gsS4MiptEPln0Y5eaZ5FSCL06P8MwurQ4CJFTA6TWC2ExgnBRho9o3weJTz84UEOLpHef9evIqTJ7SvApJi23Envgcl8kmYbAT6CTEFjIgQ%2Bj0wRvD0lVrJHA%2FrvL4y9nq1KN%2BGgXGCX2YCnVlAP%2B21JoJshUb3X4D8XBt0VKTW81AN8ug20H6YILdUw0oWdu1nz4fst8ZEhlQ8WJlCFpyXce5ETfXzDCtUQwJ6zaBCujx6xCr938xWaLHmVp4JVSasAMT%2B7KWCKy1qD9p1Ar5plvCxhUNxlQlZCq2HXqi%2BuKTqhjWAf%2Fch9iejMmIepDcN3EquqYqRKdKibry9GHn1Tfjp2JxQv92R2xnmcMAftGCCCifLktsAAAAASUVORK5CYII%3D");
+		contextMenu.insertBefore(menu, separator);
+		
+		var menuPopup = document.createElement("menupopup");
+		menu.appendChild(menuPopup);
+		
+		for(var i = 0, menu; menu = this.xSubMenus[i]; i++){
+			var menuItem;
+			if(menu.label == "separator"){
+				menuItem = document.createElement("menuseparator");
+			}
+			else{
+				menuItem = document.createElement("menuitem");
+				menuItem.setAttribute("label", menu.label);
+				if("accesskey" in menu) menuItem.setAttribute("accesskey", menu.accesskey);
+				menuItem.culMenu = menu;
+				menuItem.addEventListener("command", xCopyUtils.copyPageTitleUrlText, false);
+			}
+			menuItem.id = this.xSubMenuId + "-" + i;
+			menuPopup.appendChild(menuItem);
+		}
+	},
+	
+	onLoad: function() {
+		// initialization code
+		this.initialized = true;
+		this.initSubMenus();
+		document.getElementById("contentAreaContextMenu")
+						.addEventListener("popupshowing", xCopyUtils.showContextMenu, true);
+		window.addEventListener("unload", xCopyUtils.onUnload, false);
+	},
+
+	onUnload: function() {
+		// finalization code
+		xCopyUtils.initialized = false;
+		document.getElementById("contentAreaContextMenu")
+						.removeEventListener("popupshowing", xCopyUtils.showContextMenu, true);
+		window.removeEventListener("unload", xCopyUtils.onUnload, false);
+	},
+
+	showContextMenu: function(event) {
+		// show or hide the menuitem based on what the context menu is on
+		// see http://kb.mozillazine.org/Adding_items_to_menus
+		for (var i = 0, menu; menu = xCopyUtils.xSubMenus[i]; i++) {
+		if (!menu.condition) continue;
+			document.getElementById(xCopyUtils.xSubMenuId + "-" + i).hidden =
+				menu.condition == "select" ?
+					!gContextMenu.isTextSelected :
+				menu.condition == "link" ?
+					!gContextMenu.onLink :
+				menu.condition == "image" ?
+					!gContextMenu.onImage :
+				menu.condition == "select-link" ?
+					!(gContextMenu.isTextSelected && gContextMenu.onLink) :
+				menu.condition == "select-image" ?
+					!(gContextMenu.isTextSelected && gContextMenu.onImage) :
+				menu.condition == "link-image" ?
+					!(gContextMenu.onLink && gContextMenu.onImage) :
+				menu.condition == "select-link-image" ?
+					!(gContextMenu.isTextSelected && gContextMenu.onLink && gContextMenu.onImage) : false;
+	}
+
+	document.getElementById("context-x-copylinktext").hidden = !gContextMenu.onLink;
+	document.getElementById("context-x-copyimage-datauri").hidden = !gContextMenu.onImage;
+	document.getElementById("context-x-copybgimage-contents").hidden = !gContextMenu.hasBGImage;
+	document.getElementById("context-x-copybgimage").hidden = !gContextMenu.hasBGImage;
+	document.getElementById("context-x-copybgimage-datauri").hidden = !gContextMenu.hasBGImage;
+		var hasTitle = false;
+		var elem = gContextMenu.target;
+		if (elem.hasAttribute &&
+				elem.hasAttribute('title') &&
+				elem.title != '')
+				hasTitle = true;
+		document.getElementById("context-x-copyelemtitle").hidden = !hasTitle;
+	},
+
+	copyLinkText: function(e) {
+	// Get the link text
+	var copytext = gContextMenu.linkText();
+
+		var clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
+										getService(Ci.nsIClipboardHelper);
+		clipboard.copyString(copytext);
+	},
+	
+	copyElemTitle: function(e) {
+	// Get the target title
+	var copytext = gContextMenu.target.title;
+
+		var clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
+						getService(Ci.nsIClipboardHelper);
+	clipboard.copyString(copytext);
+	},
+	
+	copyBGImage: function(e) {
+	/*
+		let img = new content.Image();
+		img.addEventListener('load', function() {
+				var node = document.popupNode;
+		document.popupNode = img;
+				goDoCommand('cmd_copyImage');
+		document.popupNode = node;
+				if (img.parentNode) img.parentNode.removeChild(img);
+		img = null;
+		}, false);
+		img.setAttribute('style', 'display: none');
+		let body = content.document.body.appendChild(img);
+		img.setAttribute('src', gContextMenu.bgImageURL);
+	*/
+	var imagedata  = gContextMenu.bgImageURL;
+	var io         = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+	var channel    = io.newChannel(imagedata, null, null);
+	var input      = channel.open();
+	var imgTools   = Components.classes["@mozilla.org/image/tools;1"].getService(Components.interfaces.imgITools);
+
+	var container  = {};
+	imgTools.decodeImageData(input, channel.contentType, container);
+
+	var wrapped = Components.classes["@mozilla.org/supports-interface-pointer;1"].createInstance(Components.interfaces.nsISupportsInterfacePointer);
+	wrapped.data = container.value;
+
+	var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
+	trans.addDataFlavor(channel.contentType);
+	trans.setTransferData(channel.contentType, wrapped, -1);
+
+	var clipid = Components.interfaces.nsIClipboard;
+	var clip   = Components.classes["@mozilla.org/widget/clipboard;1"].getService(clipid);
+	clip.setData(trans, null, clipid.kGlobalClipboard);
+	},
+	
+	copyBGImageURL: function(e) {
+	// Get the target url
+	var copytext = gContextMenu.bgImageURL;
+
+		var clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
+										getService(Ci.nsIClipboardHelper);
+		clipboard.copyString(copytext);
+	},
+	
+	copyImageDataURI: function(e) {
+		if (!gContextMenu.onImage && !gContextMenu.hasBGImage) return;
+		function getImageDataURL() {
+			let doc = gContextMenu.target.ownerDocument;
+			let target = gContextMenu.onImage ? gContextMenu.target : (
+				let (img = doc.createElementNS(doc.documentElement.namespaceURI, "img"))
+					(img.src = gContextMenu.bgImageURL, img));
+			let canvas = doc.createElementNS(doc.documentElement.namespaceURI, "canvas");
+			let w = target.naturalWidth;
+			let h = target.naturalHeight;
+			canvas.width = w;
+			canvas.style.width = w + "px";
+			canvas.height = h;
+			canvas.style.height = h + "px";
+			try {
+				var ctx = canvas.getContext("2d");
+			} catch (ex) {
+				alert("could not create the image!");
+				return;
+			}
+			ctx.clearRect(0, 0, w, h);
+			ctx.save();
+			ctx.drawImage(target, 0, 0, w, h);
+			ctx.restore();
+			let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"]
+								 .getService(Ci.nsIClipboardHelper);
+			clipboard.copyString(canvas.toDataURL());
+		}
+		function getAnimatedImageDataURL() {
+			var imageURI = gContextMenu.onImage ? gContextMenu.target.src : gContextMenu.bgImageURL;
+			var xhr = new XMLHttpRequest();
+			xhr.open("GET", imageURI, true);
+			xhr.responseType = "blob";
+			xhr.onload = function (aEvt) {
+				if (xhr.status >= 200 && xhr.status < 300 || xhr.status === 0) {
+					var aBlob = xhr.response;
+					var aFileReader = new FileReader();
+					aFileReader.onload = function (e) {
+						var result = aFileReader.result;
+						if (xhr.status === 0) { // 修复本地图片的 Content-Type
+							result = result.replace(/^data:application\/\w+;/, "data:image;");
+						}
+						var clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"]
+											 .getService(Ci.nsIClipboardHelper);
+						clipboard.copyString(result);
+					};
+					aFileReader.readAsDataURL(aBlob);
+				}
+			};
+			xhr.send(null);
+		}
+		e.ctrlKey ? getAnimatedImageDataURL.bind(this)() : getImageDataURL.bind(this)();
+	},
+	
+	copyPageTitleUrlText: function copyText(aEvent){
+		
+		function htmlEscape(text) {
+			text = text.replace(/&/g, "&amp;");
+			text = text.replace(/>/g, "&gt;");
+			text = text.replace(/</g, "&lt;");
+			text = text.replace(/"/g, "&quot;");
+			return text;
+		}
+		
+		function convertText(text){
+			text = text.replace(/%URL_HTMLIFIED%/g, url_html);
+			text = text.replace(/%URL%/g, url);
+			text = text.replace(/%TITLE_HTMLIFIED%/g, title_html);
+			text = text.replace(/%TITLE%/g, title);
+			if(gContextMenu.isTextSelected){
+				text = text.replace(/%SEL_HTMLIFIED%/g, sel_html);
+				text = text.replace(/%SEL%/g, sel);
+			}
+			if(gContextMenu.onLink){
+				text = text.replace(/%RLINK_HTMLIFIED%/g, link_html);
+				text = text.replace(/%RLINK%/g, link);
+			}
+			if(gContextMenu.onImage){
+				text = text.replace(/%IMAGE_URL_HTMLIFIED%/g, imageUriHtml);
+				text = text.replace(/%IMAGE_URL%/g, imageUri);
+				text = text.replace(/%IMAGE_ALT_HTMLIFIED%/g, imageAltHtml);
+				text = text.replace(/%IMAGE_ALT%/g, imageAlt);
+				text = text.replace(/%IMAGE_TITLE_HTMLIFIED%/g, imageTitleHtml);
+				text = text.replace(/%IMAGE_TITLE%/g, imageTitle);
+			}
+			text = text.replace(/%EOL%/g, eol);
+			return text;
+		}
+		
+		var text = aEvent.target.culMenu.text;
+		var win = content.document;
+		var title = win.title;
+		var title_html = htmlEscape(title);
+		var url = win.location.href;
+		var url_html = htmlEscape(url);
+		if(gContextMenu.isTextSelected){
+			var sel = content.getSelection().toString();
+			var sel_html = htmlEscape(sel);
+		}
+		if(gContextMenu.onLink){
+			var link = gContextMenu.getLinkURL().toString();
+			var link_html = htmlEscape(link);
+		}
+		if(gContextMenu.onImage){
+			var imageUri = gContextMenu.imageURL;
+			var imageUriHtml = htmlEscape(imageUri);
+			var imageAlt = gContextMenu.target.alt;
+			var imageAltHtml = htmlEscape(imageAlt);
+			var imageTitle = gContextMenu.target.title;
+			var imageTitleHtml = htmlEscape(imageTitle);
+		}
+		var eol = "\r\n";
+		
+		Cc["@mozilla.org/widget/clipboardhelper;1"]
+			.getService(Ci.nsIClipboardHelper).copyString(convertText(text));
+	},
+	
+	copyTextToClipboard: function(s) {
+	// Start preparation to add contents to clipboard
+	var strunicode   = Cc["@mozilla.org/supports-string;1"].
+											 createInstance(Ci.nsISupportsString);
+	if (!strunicode) return false;
+	var strhtml   = Cc["@mozilla.org/supports-string;1"].
+											 createInstance(Ci.nsISupportsString);
+	if (!strhtml) return false;
+
+	// Assign link text to clipboard variables
+	strhtml.data = s;
+	strunicode.data  = s;
+
+	var trans = Cc["@mozilla.org/widget/transferable;1"].createInstance(Ci.nsITransferable);
+	if (!trans) return false;
+	trans.addDataFlavor("text/html");
+	trans.addDataFlavor("text/unicode");
+	trans.setTransferData("text/html", strhtml, copytext.length * 2);
+	trans.setTransferData("text/unicode", strunicode, copytext.length * 2);
+	var clipid = Ci.nsIClipboard;
+	var clip   = Cc["@mozilla.org/widget/clipboard;1"].getService(clipid);
+	if (!clip) return false;
+
+	// Add the link text to the clipboard
+	clip.setData(trans, null, clipid.kGlobalClipboard);
+	},
+
+};
+xCopyUtils.onLoad();
+
+	]]></script>
+	<popup id="contentAreaContextMenu">
+<!-- Copy link text -->
+<!-- 复制链接文本 -->
+		<menuitem id="context-x-copylinktext" label="&#x590D;&#x5236;&#x94FE;&#x63A5;&#x6587;&#x672C;"
+							accesskey="t"
+							insertbefore="context-sep-copylink"
+							oncommand="xCopyUtils.copyLinkText(event)"/>
+<!-- Copy element title -->
+<!-- 复制元素提示 -->
+		<menuitem id="context-x-copyelemtitle" label="&#x590D;&#x5236;&#x5143;&#x7D20;&#x63D0;&#x793A;"
+							accesskey="e"
+							insertbefore="context-sep-copylink"
+							oncommand="xCopyUtils.copyElemTitle(event)"/>
+<!-- Copy image data: uri -->
+<!-- 复制图像 data: URI -->
+		<menuitem id="context-x-copyimage-datauri" label="&#22797;&#21046;&#22270;&#20687; data: URI"
+							insertbefore="context-sep-copyimage"
+							oncommand="xCopyUtils.copyImageDataURI(event)"/>
+<!-- Copy background image data: uri -->
+<!-- 复制背景图像 data: URI -->
+		<menuitem id="context-x-copybgimage-datauri" label="&#22797;&#21046;&#32972;&#26223;&#22270;&#20687; data: URI"
+							insertafter="context-viewbgimage"
+							oncommand="xCopyUtils.copyImageDataURI(event)"/>
+<!-- Copy background image -->
+<!-- 复制背景图像地址 -->
+		<menuitem id="context-x-copybgimage" label="&#x590D;&#x5236;&#x80CC;&#x666F;&#x56FE;&#x50CF;&#x5730;&#x5740;"
+							insertafter="context-viewbgimage"
+							oncommand="xCopyUtils.copyBGImageURL(event)"/>
+<!-- Copy background image content -->
+<!-- 复制背景图像 -->
+		<menuitem id="context-x-copybgimage-contents" label="&#x590D;&#x5236;&#x80CC;&#x666F;&#x56FE;&#x50CF;"
+							insertafter="context-viewbgimage"
+							oncommand="xCopyUtils.copyBGImage(event)"/>
+	</popup>
+</overlay>

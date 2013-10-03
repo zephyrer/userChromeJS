@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<!--
+// ==UserScript==
+// @name           addon manager enhancements
+// @namespace      zephyrer@msn.com
+// @description    Add-Ons Manager 增强：添加 复制 ID 和 定位 两个菜单项
+// @compatibility  Firefox 4.0+
+// @include        about:addons
+// @include        chrome://mozapps/content/extensions/extensions.xul
+// @version        1.0.20130919
+//
+// @note					 使用条件：
+// @note					 稍微修改下 Sub-Script/Overlay Loader：将 !/^chrome:/.test 搜索替换为 !/^(about|chrome):/i.test （共两处）
+// ==/UserScript==
+-->
+<!DOCTYPE page SYSTEM "chrome://mozapps/locale/extensions/extensions.dtd">
+<overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  
+  <commandset id="viewCommandSet">
+    <command id="cmd_aomx_copyid"/>
+    <command id="cmd_aomx_locate"/>
+  </commandset>
+
+  <menupopup id="addonitem-popup">
+    <menuitem id="menuitem_copyid"
+    	        label="&#22797;&#21046; ID"
+    	        insertbefore="menuitem_about"
+              command="cmd_aomx_copyid" />
+    <menuitem label="&#23450;&#20301;"
+	      insertbefore="menuitem_about"
+	      command="cmd_aomx_locate"/>
+  </menupopup>
+
+	<script type="application/x-javascript">
+	<![CDATA[
+	
+	//alert("OK");
+	
+	gViewController. commands. cmd_aomx_locate = {
+	    isEnabled: function () {
+				return "addons://list/extension" == gViewController. currentViewId;
+	    },
+
+	    doCommand: function (aAddon) {
+	    	var addonLocation = aAddon.getResourceURI("").QueryInterface(Components.interfaces.nsIFileURL).file;
+	    	try {
+		    	if (addonLocation.isDirectory()) addonLocation.launch();
+		    	else addonLocation.reveal();
+		    } catch (e) {
+		      // If launch also fails let the OS handler try to open the parent.
+		      var uri = Components.classes["@mozilla.org/network/io-service;1"]
+		          .getService(Components.interfaces.nsIIOService)
+		          .newFileURI(addonLocation.isDirectory()?addonLocation:addonLocation.parent);
+		      var protocolSvc = Components
+		          .classes["@mozilla.org/uriloader/external-protocol-service;1"]
+		          .getService(Components.interfaces.nsIExternalProtocolService);
+		
+		      protocolSvc.loadUrl(uri);
+		    }
+	    }
+	};
+
+	gViewController. commands. cmd_aomx_copyid = {
+	    isEnabled: function () {
+				return true;
+	    },
+
+	    doCommand: function (aAddon) {
+	    	//Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper).copyString(gViewController.currentViewObj.getSelectedAddon().id);
+				Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper).copyString(aAddon.id);
+	    }
+	};
+		
+	]]>
+	</script>
+  
+</overlay>

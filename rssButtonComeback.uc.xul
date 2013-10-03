@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<!--
+// ==UserScript==
+// @name           rss button comeback
+// @namespace      zephyrer@msn.com
+// @description    在 URLBAR 中显示 RSS 订阅按钮
+// @compatibility  Firefox 4.0+
+// @include        main
+// @require        000-ucx.uc.js
+// @version        1.0.20110707
+// @note					 http://oflow.me/archives/310
+// ==/UserScript==
+//
+-->
+<?xml-stylesheet href="data:text/css;base64,QG5hbWVzcGFjZSB1cmwoaHR0cDovL3d3dy5tb3ppbGxhLm9yZy9rZXltYXN0ZXIvZ2F0ZWtlZXBlci90aGVyZS5pcy5vbmx5Lnh1bCk7DQojcnNzLWJ1dHRvbnsNCi1tb3otaW1hZ2UtcmVnaW9uOiByZWN0KDAsIDE2cHgsIDE2cHgsIDBweCkgIWltcG9ydGFudDsNCm1pbi13aWR0aDoxNnB4ICFpbXBvcnRhbnQ7DQptYXJnaW4tcmlnaHQ6MnB4ICFpbXBvcnRhbnQ7DQpiYWNrZ3JvdW5kOnRyYW5zcGFyZW50ICFpbXBvcnRhbnQ7DQpsaXN0LXN0eWxlLWltYWdlOnVybCgiZGF0YTppbWFnZS9naWY7YmFzZTY0LFIwbEdPRGxoRUFBUUFQY0FBQUFBQVAvLy8vOS9BUCtBQXYrQkEvK0JCUCtDQnYrREIvK0RDUCtFQ3YrRkMvK0ZEUCtHRHYrSEQvK0lFditKRlArS0Z2K0xGLytMR1ArTUdmK05IUCtPSHYrUEgvK1BJUCtSSlArU0pmK1NKditUS1ArVUt2K1ZMUCtXTHYrWE1QK1lNZitZTXYrWk0vK2NPditkUFAraFEvK2lSZitqUi8ralNQK2xUUCttVHYrblQvK29VZitwVS8rcFZQK3FWZityVi8rdFcvK3RYUCt1WGYrdVh2K3ZYLyt2WVArd1lmK3hZLyt5WmYreVp2K3paLyt6YVArMGFmKzBhdisxYlArMmJ2KzNiLyszY1ArNGNmKzRjdis1Yy8rNWRQKzZkdis3ZC8rOGVmKzhldis5ZlArK2ZmKytmdisvZ1AvQWdmL0JnLy9DaFAvQ2hmL0Nodi9EaC8vRWlmL0hqLy9Ja2YvSWt2L0prLy9KbFAvS2xmL0tsdi9OblAvT25mL09udi9Qbi8vUG9QL1FvZi9Rb3YvUnBQL1RxUC9VcWYvVXF2L1ZxLy9WclAvWnRQL2F0Zi9idC8vYnVQL2N1di9kdS8vZHZQL2V2di9mdi8vZ3dmL2h3Ly9peGYvbzBmL05uZi9TcC8vWHNmL2V2Ly9md1AvZ3cvL2h4UC9peHYvanlQL216di9uMFAvbzB2Ly8vd0FBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUNINUJBRUFBSU1BTEFBQUFBQVFBQkFBQUFqdEFBY0pHRWl3WU1GQkpFeW9nR0dqUjVFbFZiaU1TYk1Hamh3QklVYVVTUEdpQm84aFNxaG9FWU5telJzQkd6NTRTWlBIeFF3ZFFaSk15UklHalJvQkZqUUUyQW5vVEpzY1FKQkl3ZkxsaklBSUZmcjQyUmtnRUJzY1A0NUF1ZkpGUUFNSUZEQjB3TU5VMEEwZlJwNVlFWUNBZ1p3NWREaUlPTFBUVG8wZVJKd0lJSUNBS1owbUlNenNYRU5qaDVDQkE2SnMwUk9BRDVNUFpRSUFhaUVqQjhFQkJoUVE5ckxFdzA0VUxHSVFmT0lHU29JNEFlNWtJQk1BeklrVkJOMEVjRk5BUzRBOUZNQUUrSk53czVzbkFxNEVpUE9nUzRBNkdRMCtQckRBd1lRTEtRVUlGQTY1dUlTY2d3SUNBRHM9IikgIWltcG9ydGFudDt9DQojcnNzLWJ1dHRvbiBkcm9wbWFya2Vye2Rpc3BsYXk6bm9uZSAhaW1wb3J0YW50O30NCiNyc3MtYnV0dG9uIC5idXR0b24tYm94e21hcmdpbjowICFpbXBvcnRhbnQ7cGFkZGluZzowICFpbXBvcnRhbnQ7fQ0KI3Jzcy1idXR0b25bZGlzYWJsZWQ9InRydWUiXXtvcGFjaXR5OiAuNDt9" type="text/css"?>
+<!DOCTYPE window SYSTEM "chrome://browser/locale/browser.dtd" >
+<overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<hbox id="urlbar-icons">
+    <button id="rss-button"
+        insertafter="star-button"
+        ordinal="1000"
+        type="menu"
+        style="-moz-user-focus:none;min-width:16px;"
+        class="plain urlbar-icon"
+        tooltiptext="&feedButton.tooltip;"
+        onclick="return FeedHandler.onFeedButtonClick(event);">
+        <menupopup id="feed-menu"
+            onpopupshowing="return FeedHandler.buildFeedList(this);"
+            oncommand="return FeedHandler.subscribeToFeed(null, event);"
+            onclick="checkForMiddleClick(this, event);"/>
+    </button>
+</hbox>
+
+<script type="application/x-javascript">
+<![CDATA[
+	ucx.hookFunction(FeedHandler, "updateFeeds",
+		/if \(!haveFeeds\) \{/,
+		'var rssButton = document.getElementById("rss-button");\n'+
+    'if (rssButton)\n'+
+    '  rssButton.disabled = !haveFeeds;\n\n'+
+    '$&');
+  //ucx.log(FeedHandler.updateFeeds.toString());
+]]>
+</script>
+</overlay>

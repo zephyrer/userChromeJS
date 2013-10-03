@@ -1,0 +1,151 @@
+<?xml version="1.0"?>
+<!--
+// ==UserScript==
+// @name           favicon comeback and enhanced
+// @namespace      zephyrer@msn.com
+// @description    高版本中恢复当前网页图标并提供右键菜单
+// @include        main
+// @compatibility  Firefox 14.0+
+// @version        1.0.20120908
+// ==/UserScript==
+//
+-->
+
+<!DOCTYPE window SYSTEM "chrome://browser/locale/browser.dtd" >
+<overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<popupset id="mainPopupSet">
+            <menupopup  id="faviconContextMenu">
+                <menuitem label="&#28165;&#31354;&#22320;&#22336;&#26639;"
+                              onmousedown="event.preventDefault();event.stopPropagation();"
+                              onclick="event.preventDefault();event.stopPropagation();"
+                              oncommand="gURLBar.value = '';gURLBar.focus();" />
+                <menuitem label="&#31896;&#36148;&#24182;&#22312;&#24403;&#21069;&#26631;&#31614;&#39029;&#25171;&#24320;"
+                              onmousedown="event.preventDefault();event.stopPropagation();"
+                              onclick="event.preventDefault();event.stopPropagation();"
+                              oncommand="openUILinkIn(readFromClipboard(), 'current', true);" />
+                <menuitem label="&#31896;&#36148;&#24182;&#22312;&#26032;&#26631;&#31614;&#39029;&#25171;&#24320;&#65288;&#21069;&#21488;&#65289;"
+                              onmousedown="event.preventDefault();event.stopPropagation();"
+                              onclick="event.preventDefault();event.stopPropagation();"
+                              oncommand="openUILinkIn(readFromClipboard(), 'tab', true);" />
+                <menuitem label="&#31896;&#36148;&#24182;&#22312;&#26032;&#26631;&#31614;&#39029;&#25171;&#24320;&#65288;&#21518;&#21488;&#65289;"
+                              onmousedown="event.preventDefault();event.stopPropagation();"
+                              onclick="event.preventDefault();event.stopPropagation();"
+                              oncommand="gBrowser.loadOneTab(readFromClipboard(), null, null, null, true);" />
+
+                <menuseparator />
+                <menuitem label="&#22797;&#21046;&#24403;&#21069;&#26631;&#31614;&#39029;&#22320;&#22336;"
+                              onmousedown="event.preventDefault();event.stopPropagation();"
+                              onclick="event.preventDefault();event.stopPropagation();"
+                              oncommand="copyStringToClipboard(gBrowser.currentURI.spec);" />     
+                 <menuitem label="&#25335;&#36125;&#24403;&#21069;&#26631;&#31614;&#39029;&#26631;&#39064;"
+                              onmousedown="event.preventDefault();event.stopPropagation();"
+                              onclick="event.preventDefault();event.stopPropagation();"
+                              oncommand="copyStringToClipboard(content.document.title);" />   
+                 <menuitem label="&#22797;&#21046;&#24403;&#21069;&#26631;&#39064;&#92;&#110;&#22320;&#22336;"
+                              onmousedown="event.preventDefault();event.stopPropagation();"
+                              onclick="event.preventDefault();event.stopPropagation();"
+                              oncommand="copyStringToClipboard(content.document.title+'\n'+gBrowser.currentURI.spec);" />                                                                                       
+                <menuseparator />
+                <menuitem label="&#22797;&#21046;&#31449;&#28857;&#22270;&#26631;&#22320;&#22336;"
+                              onmousedown="event.preventDefault();event.stopPropagation();"
+                              onclick="event.preventDefault();event.stopPropagation();"
+                              oncommand="copyStringToClipboard(gBrowser.mCurrentTab.image);" />
+                <menuitem label="&#22797;&#21046;&#22270;&#26631;&#65288;&#66;&#65;&#83;&#69;&#54;&#52;&#65289;"
+                              onmousedown="event.preventDefault();event.stopPropagation();"
+                              onclick="event.preventDefault();event.stopPropagation();"
+                              oncommand="toBase64(gBrowser.mCurrentTab.image);" />
+                <menuitem label="&#20445;&#23384;&#24403;&#21069;&#31449;&#28857;&#22270;&#26631;"
+                              onmousedown="event.preventDefault();event.stopPropagation();"
+                              onclick="event.preventDefault();event.stopPropagation();"
+                              oncommand="openUILinkIn(gBrowser.mCurrentTab.image, 'save', {allowThirdPartyFixup:false,fromChrome:true,postData:null,referrerURI:null,initiatingDoc:event.target.ownerDocument,private:false});" />
+                <menuseparator />
+                 <menuitem label="&#33719;&#21462;&#21069;&#36827;&#34892;&#32534;&#36753;"
+                              onmousedown="event.preventDefault();event.stopPropagation();"
+                              onclick="event.preventDefault();event.stopPropagation();"
+                              oncommand="if(sbPageEditor.TOOLBAR.hidden || document.getElementById('ScrapBookToolbox').hidden) {sbPageEditor.init();} else {sbPageEditor.exit(true);}" />                       
+
+            </menupopup>
+</popupset>
+
+<textbox id="urlbar">
+	<image id="fav-image"
+		insertbefore="identity-box"
+		src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAADmUlEQVRYhe1XS5LbIBDVyZBPAj4JzUlANdI5oM8RuyzdILOfxcuiAYFkTzJJFlmEqi5JluC9fv0BD8P/8YURb4x1ddjWAesTk98d4o3xd4G/MR4VYMDjBYHHOmDdBmzbgDUppL9B5BGVLL7J4msSiz5b2O/Lu20bEBMjJUaMEfh4/z0ij9h61AKpKnX8xiihWZNC8gO8HeD9Ah9mMDO8f/s6iQrOO/BjdcDHu1g7Pr439+9ISUCttQhhhvdvXyPxiOL1xuJN9KoHPl6PRPK3hcQ0LZXET8GjV8/Bj6P1+tVvWQ1rbbVPScSYkJiwsZI42uHs+QnkEyJ5bggziHYSzC+qw/u3nDQzrG0872LcLn64z4DxFpFuqT4zM4gIRASthcQpH9I9IYQFIcywlhBTeg1aVPl4R7olAbwnpJTAzGDmvI6F1hZaOxjj4JyD1kKC7wcVQpgxTUud9DTRDh7GmJByvXs/w/sZIcyYwgIiglIKxojJvRDRmhDC3BOYwoJpWkAkpdOBN8CcuAkTwVoCkasSF3POQSmVbWzICAki6gk4ZxHCAq0JKaUKnm4J6bZL6/2M4EWpxITEDswO1roKXKwQCI1zxlBWwR0JEIgstCYw857BXhpJkVYymcBMtVw3HhCmBUSuemiMgtbUqcjMmQCdCWjtKsNpWrIaQugoLxFh21wF52kA0QhjHK5XVT0nsl0O8X0nYIw6EyjZKleC1mWhIq1ciURyDgM4DAg0wDkHc+3jXnOpEOgUOBGg7MHz5CGiRl4hobUDufEQ8xHjKFZDmUMQ/PyaABHhelVZwrGRUUpGa4lpkdgYBeccpmnpEu5yuWAcZf6xi1q7JyGRO/eBUrPGSOa2C4QwV5Di4dFa8J3A3sS0tjX+ISw9AWbOnolEx/gJieUlicvlgsvlUt8zc9dDvH+DhJnq++E4JOtVjlGfwWWxaTqTKJ6P4whj6Ok8rW3eC1Rd+0SgVUFrqptG14pzOKy1td22shtDpy5avm29f0qgfLyTsPUk82oI6bGpHNWBl0NJIft0J+xUuHOtf+kNtlfiibx77rhasnyXgwjZfV/QWv3asYzv3ElattBOjYaIVM7eJ0rJlq5ZE/O4Bf+MRFHCmHKY2A8UISx1g9rb677vu/x98fxL4O0oOdES2U83hNJB911Qnssca+2f/Tkpiaa17RKtyC7dsd+ExOtPzn5/QmSaFmjtul6wg0prfllm/+L4AbeHxJ33YvdxAAAAAElFTkSuQmCC"
+		context="faviconContextMenu"
+		blank="true"
+		spec=""
+	/>
+</textbox>
+
+<script type="application/x-javascript">
+<![CDATA[
+
+function toBase64(icon) {
+    const NSURI = "http://www.w3.org/1999/xhtml";
+    var img = new Image();
+    img.src = icon;
+    img.onload = function () {
+        var width = this.naturalWidth,
+            height = this.naturalHeight;
+        var canvas = document.createElementNS(NSURI, "canvas");
+        canvas.width = width;
+        canvas.height = height;
+        var ctx = canvas.getContext("2d");
+        ctx.drawImage(this, 0, 0);
+        copyStringToClipboard(canvas.toDataURL("image/png"));
+    };
+    img.onerror = function () {
+        Cu.reportError("Count not load: " + icon);
+    };
+}
+
+function copyStringToClipboard(s) {
+  var clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
+  clipboard.copyString(s);
+}
+
+//var identitybox = document.getElementById("identity-box");
+//identitybox.setAttribute("context", "faviconContextMenu");
+//gProxyFavIcon.setAttribute("context", "faviconContextMenu");
+
+eval("middleMousePaste = " + middleMousePaste.toString()
+  .replace("openUILink(url, event, true);", "openUILink(url, event, true, false, true, postData.value);")
+);
+
+var copyurl = document.getElementById("fav-image");
+if (copyurl) {
+  copyurl.addEventListener("dblclick", function(event){
+    if (event.button==0) {
+      openLocation();
+      goDoCommand("cmd_copy");
+    };
+  }, true);
+}
+
+var css = "#fav-image {\
+  width: 16px !important;\
+  height: 16px !important;\
+  padding: 3px 0 !important;\
+  -moz-margin-start: 3px !important;\
+  -moz-margin-end: 2px !important;\
+}";
+ucx.loadStyle(css);
+
+window.setInterval(function() {
+  var tabImg = gBrowser.selectedTab.image;
+  var tabBlank = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAADmUlEQVRYhe1XS5LbIBDVyZBPAj4JzUlANdI5oM8RuyzdILOfxcuiAYFkTzJJFlmEqi5JluC9fv0BD8P/8YURb4x1ddjWAesTk98d4o3xd4G/MR4VYMDjBYHHOmDdBmzbgDUppL9B5BGVLL7J4msSiz5b2O/Lu20bEBMjJUaMEfh4/z0ij9h61AKpKnX8xiihWZNC8gO8HeD9Ah9mMDO8f/s6iQrOO/BjdcDHu1g7Pr439+9ISUCttQhhhvdvXyPxiOL1xuJN9KoHPl6PRPK3hcQ0LZXET8GjV8/Bj6P1+tVvWQ1rbbVPScSYkJiwsZI42uHs+QnkEyJ5bggziHYSzC+qw/u3nDQzrG0872LcLn64z4DxFpFuqT4zM4gIRASthcQpH9I9IYQFIcywlhBTeg1aVPl4R7olAbwnpJTAzGDmvI6F1hZaOxjj4JyD1kKC7wcVQpgxTUud9DTRDh7GmJByvXs/w/sZIcyYwgIiglIKxojJvRDRmhDC3BOYwoJpWkAkpdOBN8CcuAkTwVoCkasSF3POQSmVbWzICAki6gk4ZxHCAq0JKaUKnm4J6bZL6/2M4EWpxITEDswO1roKXKwQCI1zxlBWwR0JEIgstCYw857BXhpJkVYymcBMtVw3HhCmBUSuemiMgtbUqcjMmQCdCWjtKsNpWrIaQugoLxFh21wF52kA0QhjHK5XVT0nsl0O8X0nYIw6EyjZKleC1mWhIq1ciURyDgM4DAg0wDkHc+3jXnOpEOgUOBGg7MHz5CGiRl4hobUDufEQ8xHjKFZDmUMQ/PyaABHhelVZwrGRUUpGa4lpkdgYBeccpmnpEu5yuWAcZf6xi1q7JyGRO/eBUrPGSOa2C4QwV5Di4dFa8J3A3sS0tjX+ISw9AWbOnolEx/gJieUlicvlgsvlUt8zc9dDvH+DhJnq++E4JOtVjlGfwWWxaTqTKJ6P4whj6Ok8rW3eC1Rd+0SgVUFrqptG14pzOKy1td22shtDpy5avm29f0qgfLyTsPUk82oI6bGpHNWBl0NJIft0J+xUuHOtf+kNtlfiibx77rhasnyXgwjZfV/QWv3asYzv3ElattBOjYaIVM7eJ0rJlq5ZE/O4Bf+MRFHCmHKY2A8UISx1g9rb677vu/x98fxL4O0oOdES2U83hNJB911Qnssca+2f/Tkpiaa17RKtyC7dsd+ExOtPzn5/QmSaFmjtul6wg0prfllm/+L4AbeHxJ33YvdxAAAAAElFTkSuQmCC";
+  var tabSpec = gBrowser.currentURI.spec;
+  var o = document.getElementById("fav-image");
+  o.setAttribute("spec", tabSpec);
+  if(tabImg) {
+    o.removeAttribute("blank");
+    o.setAttribute("src", tabImg);
+  } else {
+    o.setAttribute("blank", true);
+    o.setAttribute("src", tabBlank);
+  }
+}, 20);
+
+]]>
+</script>
+</overlay>

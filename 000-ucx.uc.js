@@ -6,7 +6,7 @@
 // @include        *
 // @version        1.0
 //
-// ÒªÇóÉÔÎ¢ĞŞ¸ÄÏÂ Sub-Script/Overlay Loader£º½« !/^chrome:/.test ËÑË÷Ìæ»»Îª !/^(about|chrome):/i.test £¨¹²Á½´¦£©
+// è¦æ±‚ç¨å¾®ä¿®æ”¹ä¸‹ Sub-Script/Overlay Loaderï¼šå°† !/^chrome:/.test æœç´¢æ›¿æ¢ä¸º !/^(about|chrome):/i.test ï¼ˆå…±ä¸¤å¤„ï¼‰
 // ==/UserScript==
 var ucx = {
   loadStyle: function(href){
@@ -112,7 +112,24 @@ var ucx = {
 	}
 }
 
-function $(id) document.getElementById(id)
+if (!window.$) {
+  window.$ = function () {
+  	if (arguments.length == 1) {
+  		return document.getElementById(arguments[0]);
+  	}
+  	let elements = [];
+  	for (let i = 0, e = arguments.length; i < e; ++i) {
+  		let element = document.getElementById(arguments[i]);
+  		if (element) {
+  			elements.push(element);
+  		}
+  		else {
+  			Debug.log("requested a non-existing element: " + arguments[i]);
+  		}
+  	}
+  	return elements;
+  }
+}
 
 
 

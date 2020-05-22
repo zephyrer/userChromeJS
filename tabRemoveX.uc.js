@@ -23,18 +23,31 @@ var tabRemoveX = {
   },
 
   get locale() {
-    let locale = Services.prefs.getCharPref("general.useragent.locale", "");
-    if (locale === "") {
-      locale = Services.prefs.getCharPref("intl.locale.requested", "");
-      if (locale === "") {
-        locale = Services.prefs.getCharPref("intl.accept_languages", "");
-      }
-      if (locale !== "") {
-        locale = locale.substring(0,locale.indexOf(','));
-      } else {
-        locale = Services.prefs.getCharPref("font.language.group", "");
-      }
+    let locale = "";
+    /*
+    let prefs = ["general.useragent.locale",
+                 "intl.locale.requested",
+                 "intl.accept_languages",
+                 "font.language.group"
+                ];
+    let i = 0;
+    for (i=0; i<prefs.length; i++) {
+      locale = Services.prefs.getCharPref(prefs[i], "");
+      if (locale !== "") break;
     }
+    if (/^chrome:\/\/.+\/locale\/.+\.properties/.test(locale))
+      locale = Services.prefs.getComplexValue(prefs[i], Components.interfaces.nsIPrefLocalizedString).data;
+    if (locale.includes(',')) {
+      locale = locale.substring(0, locale.indexOf(','));
+    }
+    */
+    //Get the currently active Browser Window
+    let activeWindow = Services.wm.getMostRecentWindow("navigator:browser");
+    //Get the window.navigator from current window/tab
+    //activeWindow.document.defaultView is the <window> you want to use
+    let defaultViewNavigator = activeWindow.document.defaultView.navigator;
+    locale = defaultViewNavigator.language;
+
     return locale;
   },
 

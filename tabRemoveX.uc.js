@@ -6,6 +6,7 @@
 // @exclude        about:*
 // @author         Zephyrer
 // @compatibility  72
+// @version        2020/05/22 08:28 locale detection logic enhanced: support "intl.accept_languages" pref
 // @version        2020/05/21 00:45 1.0
 // @version        2020/05/20 19:28 initial
 // ==/UserScript==
@@ -25,6 +26,9 @@ var tabRemoveX = {
     let locale = Services.prefs.getCharPref("general.useragent.locale", "");
     if (locale === "") {
       locale = Services.prefs.getCharPref("intl.locale.requested", "");
+      if (locale === "") {
+        locale = Services.prefs.getCharPref("intl.accept_languages", "");
+      }
       if (locale !== "") {
         locale = locale.substring(0,locale.indexOf(','));
       } else {

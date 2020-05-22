@@ -8,6 +8,7 @@
 // @Note           タブのデタッチ非対応
 // @Note           タスクバーからprivate browsingモードに入るとtabの状態と復帰後のtabのセッション保存おかしくなる
 // @compatibility  72
+// @version        2020/05/22 08:28 locale detection logic enhanced: support "intl.accept_languages" pref
 // @version        2020/05/21 00:49 add menuitem label of zh-CN
 // @version        2019/11/14 00:00 Fix 72+ Bug 1591145 Remove Document.GetAnonymousElementByAttribute
 // @version        2019/05/29 16:00 Bug 1519514 - Convert tab bindings
@@ -72,6 +73,9 @@ var tabProtect = {
     let locale = Services.prefs.getCharPref("general.useragent.locale", "");
     if (locale === "") {
       locale = Services.prefs.getCharPref("intl.locale.requested", "");
+      if (locale === "") {
+        locale = Services.prefs.getCharPref("intl.accept_languages", "");
+      }
       if (locale !== "") {
         locale = locale.substring(0,locale.indexOf(','));
       } else {

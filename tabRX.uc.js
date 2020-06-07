@@ -1,18 +1,16 @@
 // ==UserScript==
-// @name           tabRemoveX.uc.js
+// @name           tabRX.uc.js
 // @namespace      https://github.com/zephyrer
-// @description    Remove tabs with the same domain/host as current
+// @description    Remove/Refresh tabs with the same domain/host as current
 // @include        main
 // @exclude        about:*
 // @author         Zephyrer
 // @compatibility  72
-// @version        2020/05/22 21:51 changing locale detection logic to using navigator.language
-// @version        2020/05/22 08:28 locale detection logic enhanced: support "intl.accept_languages" pref
-// @version        2020/05/21 00:45 1.0
-// @version        2020/05/20 19:28 initial
+// @version        2020/06/07 16:54 1.0
+// @version        2020/06/07 15:58 initial
 // ==/UserScript==
 
-var tabRemoveX = {
+var tabRX = {
   get tabContext() {
     return document.getElementById("tabContextMenu");
   },
@@ -25,23 +23,6 @@ var tabRemoveX = {
 
   get locale() {
     let locale = "";
-    /*
-    let prefs = ["general.useragent.locale",
-                 "intl.locale.requested",
-                 "intl.accept_languages",
-                 "font.language.group"
-                ];
-    let i = 0;
-    for (i=0; i<prefs.length; i++) {
-      locale = Services.prefs.getCharPref(prefs[i], "");
-      if (locale !== "") break;
-    }
-    if (/^chrome:\/\/.+\/locale\/.+\.properties/.test(locale))
-      locale = Services.prefs.getComplexValue(prefs[i], Components.interfaces.nsIPrefLocalizedString).data;
-    if (locale.includes(',')) {
-      locale = locale.substring(0, locale.indexOf(','));
-    }
-    */
     //Get the currently active Browser Window
     let activeWindow = Services.wm.getMostRecentWindow("navigator:browser");
     //Get the window.navigator from current window/tab
@@ -69,11 +50,29 @@ var tabRemoveX = {
     }
   },
 
+  test: function(aTab){
+    let domain = tabRX.getDomain(aTab.linkedBrowser.currentURI.spec);
+    var ps = Services.prompt;
+    window.focus();
+    let msg = "The domain of current tab is " + domain + ".";
+    ps.alert(null, "TabRX", msg);
+  },
+
   tabContextMenu: function(){
     //tab context menu
     var tabContext = this.tabContext;
     var menuitem = tabContext.appendChild(
                         document.createXULElement("menuitem"));
+                        /*
+    menuitem.id = "tabRX-test";
+    menuitem.setAttribute("type", "command");
+    menuitem.setAttribute("accesskey", "T");
+    menuitem.setAttribute("oncommand","tabRX.test(TabContextMenu.contextTab);");
+    menuitem.setAttribute("label", "Test");
+
+    menuitem = tabContext.appendChild(
+                        document.createXULElement("menuitem"));
+                        */
     menuitem.id = "tabRemoveSameDomain";
     menuitem.setAttribute("type", "command");
     menuitem.setAttribute("accesskey", "D");
@@ -99,6 +98,36 @@ var tabRemoveX = {
         break;
       default:
         menuitem.setAttribute("label", "Close all tabs w/ the same host");
+        break;
+    }
+
+    menuitem = tabContext.appendChild(
+                        document.createXULElement("menuitem"));
+    menuitem.id = "tabRefreshSameDomain";
+    menuitem.setAttribute("type", "command");
+    menuitem.setAttribute("accesskey", "H");
+    menuitem.setAttribute("oncommand","gBrowser.refreshTabsSameDomainAs(TabContextMenu.contextTab);");
+    switch(this.locale) {
+      case "zh-CN":
+        menuitem.setAttribute("label", "\u5237\u65B0\u540C\u4E00\u57DF\u540D\u6807\u7B7E\u9875");//刷新同一域名标签页
+        break;
+      default:
+        menuitem.setAttribute("label", "Refresh all tabs w/ the same domain");
+        break;
+    }
+
+    menuitem = tabContext.appendChild(
+                        document.createXULElement("menuitem"));
+    menuitem.id = "tabRefreshSameHost";
+    menuitem.setAttribute("type", "command");
+    menuitem.setAttribute("accesskey", "H");
+    menuitem.setAttribute("oncommand","gBrowser.refreshTabsSameHostAs(TabContextMenu.contextTab);");
+    switch(this.locale) {
+      case "zh-CN":
+        menuitem.setAttribute("label", "\u5237\u65B0\u540C\u4E00\u4E3B\u673A\u540D\u6807\u7B7E\u9875");//刷新同一主机名标签页
+        break;
+      default:
+        menuitem.setAttribute("label", "Refresh all tabs w/ the same host");
         break;
     }
 
@@ -136,12 +165,12 @@ var tabRemoveX = {
 }
 
   gBrowser.removeTabsSameDomainAs = function(aTab){
-    let domain = tabRemoveX.getDomain(aTab.linkedBrowser.currentURI.spec);
+    let domain = tabRX.getDomain(aTab.linkedBrowser.currentURI.spec);
     let tabsToRemove = [];
     for (let tab of this.tabs) {
       if (tab.pinned) continue;
       if ("isLockTab" in gBrowser && this.isLockTab(tab)) continue;
-      if (tabRemoveX.getDomain(tab.linkedBrowser.currentURI.spec) == domain) {
+      if (tabRX.getDomain(tab.linkedBrowser.currentURI.spec) == domain) {
         tabsToRemove.push(tab);
       }
     }
@@ -177,16 +206,38 @@ var tabRemoveX = {
     this.removeTabs(tabsToRemove);
   };
 
+  gBrowser.refreshTabsSameDomainAs = function(aTab){
+    let domain = tabRX.getDomain(aTab.linkedBrowser.currentURI.spec);
+    let tabsToRefresh = [];
+    for (let tab of this.tabs) {
+      if (tabRX.getDomain(tab.linkedBrowser.currentURI.spec) == domain) {
+        tabsToRefresh.push(tab);
+      }
+    }
+    this.reloadTabs(tabsToRefresh);
+  };
+
+  gBrowser.refreshTabsSameHostAs = function(aTab){
+    let host = aTab.linkedBrowser.currentURI.host;
+    let tabsToRefresh = [];
+    for (let tab of this.tabs) {
+      if (tab.linkedBrowser.currentURI.host == host) {
+        tabsToRefresh.push(tab);
+      }
+    }
+    this.reloadTabs(tabsToRefresh);
+  };
+
   // We should only start the redirection if the browser window has finished
   // starting up. Otherwise, we should wait until the startup is done.
   if (gBrowserInit.delayedStartupFinished) {
-    tabRemoveX.init();
+    tabRX.init();
   } else {
     let delayedStartupFinished = (subject, topic) => {
       if (topic == "browser-delayed-startup-finished" &&
           subject == window) {
         Services.obs.removeObserver(delayedStartupFinished, topic);
-        tabRemoveX.init();
+        tabRX.init();
       }
     };
     Services.obs.addObserver(delayedStartupFinished,

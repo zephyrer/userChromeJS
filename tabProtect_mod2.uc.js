@@ -7,10 +7,8 @@
 // @author         Alice0775
 // @Note           タブのデタッチ非対応
 // @Note           タスクバーからprivate browsingモードに入るとtabの状態と復帰後のtabのセッション保存おかしくなる
-// @compatibility  72
-// @version        2020/05/22 08:28 locale detection logic enhanced: support "intl.accept_languages" pref
-// @version        2020/05/21 00:49 add menuitem label of zh-CN
-// @version        2019/11/14 00:00 Fix 72+ Bug 1591145 Remove Document.GetAnonymousElementByAttribute
+// @compatibility  69
+// @version        2022/01/31 01:24 chinese label
 // @version        2019/05/29 16:00 Bug 1519514 - Convert tab bindings
 // @version        2019/05/21 08:30 fix 69.0a1 Bug 1551320 - Replace all createElement calls in XUL documents with createXULElement
 // @version        2018/09/27 10:30 fix  tab detach
@@ -69,35 +67,6 @@ var tabProtect = {
     return document.getElementById("tabContextMenu");
   },
 
-  get locale() {
-    let locale = "";
-    /*
-    let prefs = ["general.useragent.locale",
-                 "intl.locale.requested",
-                 "intl.accept_languages",
-                 "font.language.group"
-                ];
-    let i = 0;
-    for (i=0; i<prefs.length; i++) {
-      locale = Services.prefs.getCharPref(prefs[i], "");
-      if (locale !== "") break;
-    }
-    if (/^chrome:\/\/.+\/locale\/.+\.properties/.test(locale))
-      locale = Services.prefs.getComplexValue(prefs[i], Components.interfaces.nsIPrefLocalizedString).data;
-    if (locale.includes(',')) {
-      locale = locale.substring(0, locale.indexOf(','));
-    }
-    */
-    //Get the currently active Browser Window
-    let activeWindow = Services.wm.getMostRecentWindow("navigator:browser");
-    //Get the window.navigator from current window/tab
-    //activeWindow.document.defaultView is the <window> you want to use
-    let defaultViewNavigator = activeWindow.document.defaultView.navigator;
-    locale = defaultViewNavigator.language;
-
-    return locale;
-  },
-
   init: function(){
     console.log("init");
     this.tabContextMenu();
@@ -143,7 +112,8 @@ var tabProtect = {
     gBrowser.protectTabIcon = function (aTab){
       const kXULNS =
                "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-      var image = aTab.querySelector(".tab-icon-protect");
+      var image = document.getAnonymousElementByAttribute(
+                               aTab, "class", "tab-icon-protect");
       if ( aTab.hasAttribute("tabProtect") ) {
         if(!image){
           var stack = aTab.querySelector(".tab-stack");
@@ -165,8 +135,6 @@ var tabProtect = {
         margin-top: 0px; /*要調整*/
         margin-left: 0px; /*要調整*/
         list-style-image:url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAQUlEQVQ4jWNgGAXDADASUvDvOsN/fPJMlLqAhRhFTJqo/H/XKXQBsoFEuQDDVnIMQPcGXJxYA3C5hiwvUOwCZAAAlRcK7m+YgB4AAAAASUVORK5CYII=');
-        width: 16px;
-        height: 16px;
       }
       tab:not([tabProtect]) .tab-icon-protect {
         display: none;
@@ -247,6 +215,13 @@ var tabProtect = {
   },
 
   tabContextMenu: function(){
+    // locale
+    //Get the currently active Browser Window
+    var activeWindow = Services.wm.getMostRecentWindow("navigator:browser");
+    //Get the window.navigator from current window/tab
+    //activeWindow.document.defaultView is the <window> you want to use
+    var defaultViewNavigator = activeWindow.document.defaultView.navigator;
+    var locale = defaultViewNavigator.language;
     //tab context menu
     var tabContext = this.tabContext;
     var menuitem = this.tabProtectMenu
@@ -254,12 +229,14 @@ var tabProtect = {
                         document.createXULElement("menuitem"));
     menuitem.id = "tabProtect";
     menuitem.setAttribute("type", "checkbox");
-    if (this.locale === "zh-CN")
+    if (locale == "zh-CN") {
       menuitem.setAttribute("label", "\u4FDD\u62A4\u6807\u7B7E\u9875");//保护标签页
-    else if (Services.appinfo.version.split(".")[0] >= 63)
-      menuitem.setAttribute("label", "Protect This Tab(s)");
-    else
-      menuitem.setAttribute("label", "Protect This Tab");
+    } else {
+      if (Services.appinfo.version.split(".")[0] >= 63)
+        menuitem.setAttribute("label", "Protect This Tab(s)");
+      else
+        menuitem.setAttribute("label", "Protect This Tab");
+    }
     menuitem.setAttribute("accesskey", "P");
     menuitem.setAttribute("oncommand","tabProtect.toggle(TabContextMenu.contextTab);");
     tabContext.addEventListener('popupshowing', this, false);

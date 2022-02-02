@@ -5,11 +5,8 @@
 // @include        *
 // @exclude        about:*
 // @exclude        chrome://mozapps/content/downloads/unknownContentType.xul
-// @compatibility  73
-// @version        2020/05/22 08:28 locale detection logic enhanced: support "intl.accept_languages" pref
-// @version        2020/05/21 00:49 add menuitem label of zh-CN
-// @version        2020/02/12 16:30 fix revert url when open from ul bar
-// @version        2019/11/14 00:00 Fix 72+ Bug 1591145 Remove Document.GetAnonymousElementByAttribute
+// @compatibility  69
+// @version        2022/01/31 01:09 chinese label
 // @version        2019/06/06 07:00 Bug 1534681 Use ReferrerInfo class in document
 // @version        2019/05/29 16:00 Bug 1519514 - Convert tab bindings
 // @version        2019/05/21 08:30 fix 69.0a1 Bug 1534407 - Enable browser.xhtml by default
@@ -57,17 +54,6 @@ patch: {
   if (location.href != "chrome://browser/content/browser.xhtml")
     break patch;
 
-  gURLBar._loadURL_org = gURLBar._loadURL;
-  gURLBar._loadURL = function _loadURL(url, where, openParams) {
-    if (url && where  == "current" && "isLockTab" in gBrowser &&
-        gBrowser.isLockTab(gBrowser.selectedTab) &&
-        !/^\s*(javascript:|data:|moz-extension:)/.test(url) &&
-        !gBrowser.isHashLink(url, gBrowser.currentURI.spec)) {
-      where  = "tab";
-    }
-    gURLBar._loadURL_org(url, where, openParams);
-  }
-
   window.tabLock = {
     ignoreNextPrevLink: true, //タブをロックしている状態で, 次のページ, 前のページ などは ロックを無視するかどうかデフォルト値
     ignoreHashLink: true, //タブをロックしている状態で,  href ="#xxx" などは ロックを無視するかどうかデフォルト値
@@ -106,35 +92,6 @@ patch: {
 
     get tabContext() {
       return document.getElementById("tabContextMenu");
-    },
-
-    get locale() {
-      let locale = "";
-      /*
-      let prefs = ["general.useragent.locale",
-                   "intl.locale.requested",
-                   "intl.accept_languages",
-                   "font.language.group"
-                  ];
-      let i = 0;
-      for (i=0; i<prefs.length; i++) {
-        locale = Services.prefs.getCharPref(prefs[i], "");
-        if (locale !== "") break;
-      }
-      if (/^chrome:\/\/.+\/locale\/.+\.properties/.test(locale))
-        locale = Services.prefs.getComplexValue(prefs[i], Components.interfaces.nsIPrefLocalizedString).data;
-      if (locale.includes(',')) {
-        locale = locale.substring(0, locale.indexOf(','));
-      }
-      */
-      //Get the currently active Browser Window
-      let activeWindow = Services.wm.getMostRecentWindow("navigator:browser");
-      //Get the window.navigator from current window/tab
-      //activeWindow.document.defaultView is the <window> you want to use
-      let defaultViewNavigator = activeWindow.document.defaultView.navigator;
-      locale = defaultViewNavigator.language;
-
-      return locale;
     },
 
     init: function(){
@@ -185,7 +142,8 @@ patch: {
       gBrowser.lockTabIcon = function (aTab){
         const kXULNS =
                  "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-        var image = aTab.querySelector(".tab-icon-lock");
+        var image = document.getAnonymousElementByAttribute(
+                                 aTab, "class", "tab-icon-lock");
         if ( aTab.hasAttribute("tabLock") ){
           if(!image){
             var stack = aTab.querySelector(".tab-stack");
@@ -197,6 +155,7 @@ patch: {
           }
         }
       }
+
 
       gBrowser.isHashLink = function (aUrl, aDocumentUrl){
         if(!tabLock.getPref('userChrome.tabLock.ignoreHashLink','bool', tabLock.ignoreHashLink))
@@ -219,8 +178,6 @@ patch: {
           margin-top: 0px; /*要調整*/
           margin-left: 0px; /*要調整*/
           list-style-image:url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAjElEQVQ4je3RsQ7CMAyE4S9pURl5/6csGxKJw1AKFBARK+IkD3Fyv86OQouHOhNBqzQcdJSPzCKIEMgkKFTMXcDmMI6LGzuGnvkFoBRQiWtn/x1g5dwBpx4gnalDxAZUcm4jad3HxwTpzaNxmtZef4RMkrNbDQPTtN53AanSniM0S6y8/ES82v76MV0AlREpDobXTpUAAAAASUVORK5CYII=');
-          width: 16px;
-          height: 16px;
         }
         tab:not([tabLock]) .tab-icon-lock {
           display: none !important;
@@ -285,6 +242,13 @@ patch: {
     },
 
     tabContextMenu: function(){
+      // locale
+      //Get the currently active Browser Window
+      var activeWindow = Services.wm.getMostRecentWindow("navigator:browser");
+      //Get the window.navigator from current window/tab
+      //activeWindow.document.defaultView is the <window> you want to use
+      var defaultViewNavigator = activeWindow.document.defaultView.navigator;
+      var locale = defaultViewNavigator.language;
       //tab context menu
       var tabContext = this.tabContext;
       var menuitem = this.tabLockMenu
@@ -292,12 +256,14 @@ patch: {
                           document.createXULElement("menuitem"));
       menuitem.id = "tabLock";
       menuitem.setAttribute("type", "checkbox");
-      if (this.locale === "zh-CN")
+      if (locale == "zh-CN") {
         menuitem.setAttribute("label", "\u9501\u5B9A\u6807\u7B7E\u9875");//锁定标签页
-      else if (Services.appinfo.version.split(".")[0] >= 63)
-        menuitem.setAttribute("label", "Lock This Tab(s)");
-      else
-        menuitem.setAttribute("label", "Lock This Tab");
+      } else {
+        if (Services.appinfo.version.split(".")[0] >= 63)
+          menuitem.setAttribute("label", "Lock This Tab(s)");
+        else
+          menuitem.setAttribute("label", "Lock This Tab");
+      }
       menuitem.setAttribute("accesskey", "L");
       menuitem.setAttribute("oncommand","tabLock.toggle(TabContextMenu.contextTab);");
       tabContext.addEventListener('popupshowing', this, false);

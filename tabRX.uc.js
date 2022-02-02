@@ -6,6 +6,7 @@
 // @exclude        about:*
 // @author         Zephyrer
 // @compatibility  72
+// @version        2022/02/01 17:54 1.2
 // @version        2020/06/07 16:54 1.0
 // @version        2020/06/07 15:58 initial
 // ==/UserScript==
@@ -51,16 +52,26 @@ var tabRX = {
   },
 
   test: function(aTab){
-    let domain = tabRX.getDomain(aTab.linkedBrowser.currentURI.spec);
-    var ps = Services.prompt;
+    let ps = Services.prompt;
     window.focus();
-    let msg = "The domain of current tab is " + domain + ".";
+    //let domain = tabRX.getDomain(aTab.linkedBrowser.currentURI.spec);
+    //let msg = "The domain of current tab is " + domain + ".";
+    let msg = "Current language is " + this.locale;
     ps.alert(null, "TabRX", msg);
   },
 
   tabContextMenu: function(){
     //tab context menu
     var tabContext = this.tabContext;
+    tabContext = tabContext.appendChild(
+                        document.createXULElement("menu"));
+    tabContext.id = "context_tabRX";
+    tabContext.setAttribute("label", (this.locale == "zh-CN") ? "\u540C\u6E90\u6807\u7B7E\u9875" : "Tabs From Same Source");//同源标签页
+    tabContext.setAttribute("accesskey", "Y");
+    tabContext = tabContext.appendChild(
+                        document.createXULElement("menupopup"));
+    tabContext.id = "tabRX";
+
     var menuitem = tabContext.appendChild(
                         document.createXULElement("menuitem"));
                         /*
@@ -131,7 +142,7 @@ var tabRX = {
         break;
     }
 
-    tabContext.addEventListener('popupshowing', this, false);
+    this.tabContext.addEventListener('popupshowing', this, false);
   },
 
   popupshowing: function(event) {
